@@ -1,0 +1,12 @@
+numpy==1.19.4
+ntplib==0.3.4
+pandas==1.1.5
+pendulum==2.1.2
+python-dateutil==2.7.3
+python-engineio==3.14.2
+python-socketio==4.6.1
+pytz==2018.5
+requests==2.25.0
+shortuuid==1.0.1
+six==1.11.0
+websocket-client==1.2.1

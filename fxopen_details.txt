@@ -1,0 +1,12 @@
+Email: admin@algowolf.com
+Server: ttdemomarginal.fxopen.net
+Login: 9000431
+Password: wRBnEJmd
+Read-only Login: 9000431-readonly
+Read-only Password: BByGEjRS
+Type: Gross
+Balance: 10000 USD
+Leverage: 1 : 100
+WebApi Id: 5a96d26f-c7e0-40ee-96f8-1621d8afcd7f
+WebApi Key: 2qmHFttRswczhpCW
+WebApi Secret: r9rZKcbHk37dXc3WrbgHcJeRn38EDFrntssMpm3Q2aabRs7eCJK2cjrR4HKSdFeP
