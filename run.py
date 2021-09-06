@@ -2,6 +2,7 @@ import sys
 import socketio
 import os
 import json
+import time
 import traceback
 from app.fxopen import FXOpen
 
@@ -101,21 +102,23 @@ def getParent():
 	return user_container.getParent()
 
 
-# Create Position EPT
+def onFXODisconnect():
+	while True:
+		for broker_id in user_container.users:
+			user = user_container.users[broker_id]
+			try:
+				if user.account_client is not None and not user.account_client.is_connected:
+					user.account_client.connect()
+			except Exception:
+				print(traceback.format_exc(), flush=True)
 
-# Modify Position EPT
+		# try:
+		# 	if not user.price_client.is_connected:
+		# 		user.price_client.connect()
+		# except Exception:
+		# 	print(traceback.format_exc(), flush=True)
 
-# Delete Position EPT
-
-# Create Order EPT
-
-# Modify Order EPT
-
-# Delete Order EPT
-
-# Get Account Details EPT
-
-# Get All Accounts EPT
+		time.sleep(1)
 
 
 @sio.on('connect', namespace='/broker')
@@ -222,3 +225,5 @@ def createApp():
 if __name__ == '__main__':
 	sio = createApp()
 	print('DONE')
+
+	onFXODisconnect()

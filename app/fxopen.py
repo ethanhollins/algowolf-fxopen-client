@@ -1,4 +1,3 @@
-from app.tradelib.period import ONE_MINUTE, TEN_MINUTES, THREE_HOURS, TWO_HOURS
 import numpy as np
 import pandas as pd
 import time
@@ -75,6 +74,7 @@ class FXOpen(object):
 		self.account_subscriptions = []
 		self.price_subscriptions = {}
 
+		self.account_client = None
 		if broker_id != "PARENT":
 			self.account_client = Client(self, is_demo=self.isDemo, client_type="account")
 			self.account_client.connect()
@@ -86,7 +86,7 @@ class FXOpen(object):
 
 		print('[FXOpen.__init__] DONE.', flush=True)
 
-		Thread(target=self._periodic_check).start()
+		# Thread(target=self._periodic_check).start()
 
 	
 	def _periodic_check(self):
@@ -95,15 +95,16 @@ class FXOpen(object):
 		# Send ping to server to check connection status
 		while self.is_running:
 			if time.time() - self._last_update > TEN_SECONDS:
-				if self.is_connected:
-					print('SEND PING', flush=True)
+				# if self.is_connected:
+				# 	print('SEND PING', flush=True)
 
-					# msg_id = self.generateReference()
-					# self.client.send({
-					# 	"Id": msg_id,
-					# 	"Request": "Trades"
-					# })
-					self._last_update = time.time()
+				# 	# msg_id = self.generateReference()
+				# 	# self.client.send({
+				# 	# 	"Id": msg_id,
+				# 	# 	"Request": "Trades"
+				# 	# })
+				# 	self._last_update = time.time()
+				pass
 
 			time.sleep(5)
 		
@@ -213,7 +214,7 @@ class FXOpen(object):
 			params["count"] = int(-count * count_multi)
 
 		else:
-			return
+			return { "error": "Bad Request." }
 			
 		fxo_instrument = self.convertToFXOInstrument(product)
 		fxo_period = self.convertToFXOPeriod(period)
@@ -279,7 +280,7 @@ class FXOpen(object):
 			result.index = result.index.astype(int)
 			return result.to_dict()
 		else:
-			return
+			return { "error": "Failed to retrieve data." }
 
 
 

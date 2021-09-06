@@ -34,6 +34,8 @@ class Client(object):
 		self.is_demo = is_demo
 		self.host = "marginalttdemowebapi.fxopen.net" if is_demo else "marginalttlivewebapi.fxopen.net"
 
+		self.is_connected = False
+
 		self.client_type = client_type
 		if client_type == "account":
 			self.msg_queue = self.broker.account_msg_queue
@@ -152,7 +154,7 @@ class Client(object):
 		# print(f"[Client.connect] connecting: {'wss://' + self.host + ':' + str(self.port)}")
 		# self.ssock.connect("wss://" + self.host + ':' + str(self.port))
 
-		self.broker.is_connected = True
+		self.is_connected = True
 
 		print('[FXOpen] Connected', flush=True)
 
@@ -271,7 +273,7 @@ class Client(object):
 
 		print('[FXOpen] Disconnected...', flush=True)
 
-		self.broker.is_connected = False
+		self.is_connected = False
 
 
 	def stop(self):
