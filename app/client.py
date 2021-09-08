@@ -116,17 +116,23 @@ class Client(object):
 		:return:
 		"""
 		if len(data) > 1:
-			length = data[1] & 127
-			index = 2
-			if length < 126:
+			try:
+				data[:2].decode('utf-8')
+				return array.array('B', data).tobytes()
+				
+			except UnicodeDecodeError:
+				length = data[1] & 127
 				index = 2
-			if length == 126:
-				index = 4
-			elif length == 127:
-				index = 10
-			return array.array('B', data[index:]).tobytes()
+				if length < 126:
+					index = 2
+				if length == 126:
+					index = 4
+				elif length == 127:
+					index = 10
+				return array.array('B', data[index:]).tobytes()
+
 		else:
-			return b''
+			return array.array('B', data).tobytes()
 
 
 	def connect(self, timeout=None):
@@ -182,9 +188,10 @@ class Client(object):
 
 					if self.ssock is not None:
 						# sock_msg = json.dumps(payload).encode()
+						print(f"[FXOpen] send1 {json.dumps(payload)}", flush=True)
 						sock_msg = self.ws_encode(data=json.dumps(payload), opcode=OPCODE_TEXT)
 
-						print(f"[FXOpen] send {sock_msg}", flush=True)
+						print(f"[FXOpen] send2 {sock_msg}", flush=True)
 
 						self.ssock.sendall(sock_msg)
 						# self.ssock.send(sock_msg)
@@ -222,32 +229,40 @@ class Client(object):
 
 
 	def match_buffer(self, buffer, indicies=[], msg=''):
+		print(f"[match_buffer] {len(buffer)}, {indicies}", flush=True)
 		for i in range(len(buffer)):
 			json_data = self.read_msg(msg + buffer[i])
 			if json_data is not None:
+				print(f"[match_buffer] FOUND", flush=True)
 				return json_data, indicies
 			else:
 				new_buffer = buffer[:i] + buffer[i+1:]
 				new_indicies = indicies + [i]
-				return self.match_buffer(new_buffer, new_indicies, msg + buffer[i])
+				result_data, result_indicies = self.match_buffer(new_buffer, new_indicies, msg + buffer[i])
+				if result_data is not None and result_indicies is not None:
+					print(f"[match_buffer] FOUND2", flush=True)
+					return result_data, result_indicies
 
+		print(f"[match_buffer] NOPE", flush=True)
 		return None, None
 
 
 	def receive(self):
 		print("[FXOpen] receive", flush=True)
 		
-		buffer=[]
+		# buffer=[]
+		buffer=''
 		try:
 			while True:
 				try:
-					recv = self.ws_decode(self.ssock.recv(1024)).decode()
+					recv = self.ws_decode(self.ssock.recv()).decode()
 					if len(recv) == 0:
 						break
 					
 					msg = self.read_msg(recv)
 					if msg is None:
-						buffer.append(recv)
+						# buffer.append(recv)
+						buffer += recv
 					else:
 						self.on_message(msg)
 
@@ -256,15 +271,39 @@ class Client(object):
 					print(f'[FXOpen] ERROR:\n{traceback.format_exc()}', flush=True)
 					break
 
-				# while len(buffer):
 				if len(buffer):
-					# print(f"BUFFER: {len(buffer)}", flush=True)
+					# print(f"BUFFER: {len(buffer)}, {buffer}", flush=True)
 					
-					msg, indicies = self.match_buffer(buffer)
+					# msg, indicies = self.match_buffer(buffer)
+					# end_idx = 0
+					# messages = []
+					# while end_idx != -1:
+					# 	end_idx = buffer.find("}{")
+					# 	if end_idx == -1:
+					# 		msg = self.read_msg(buffer)
+					# 		if msg is not None:
+					# 			messages.append(msg)
+					# 			buffer = ''
+					# 	else:
+					# 		msg = self.read_msg(buffer[:end_idx+1])
+					# 		if msg is not None:
+					# 			messages.append(msg)
+					# 		buffer = buffer[end_idx+1:]
+					
+					# for msg in messages:
+					# 	try:
+					# 		self.on_message(msg)
+					# 	except Exception:
+					# 		print(traceback.format_exc())
+
+					msg = self.read_msg(buffer)
 					if msg is not None:
-						self.on_message(msg)
-						for x in indicies:
-							del buffer[x]
+						print(f"BUFFER MSG COMPLETE: {len(buffer)}", flush=True)
+						buffer = ''
+						try:
+							self.on_message(msg)
+						except Exception:
+							print(traceback.format_exc())
 				
 				time.sleep(0.001)
 
@@ -278,6 +317,13 @@ class Client(object):
 
 	def stop(self):
 		self.ssock.close()
+
+	
+	def shutdown(self):
+		try:
+			self.ssock.shutdown(1)
+		except Exception:
+			print(traceback.format_exc(), flush=True)
 
 
 	def event(self, event_type, func):

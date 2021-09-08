@@ -102,13 +102,32 @@ def getParent():
 	return user_container.getParent()
 
 
+def reconnect_user(user):
+	user.account_client.connect()
+	user.send_login()
+	user.update_trades()
+
+
 def onFXODisconnect():
+	ping_timer = time.time()
 	while True:
 		for broker_id in user_container.users:
 			user = user_container.users[broker_id]
 			try:
-				if user.account_client is not None and not user.account_client.is_connected:
-					user.account_client.connect()
+				if user.account_client is not None:
+					if not user.account_client.is_connected:
+						reconnect_user(user)
+						ping_timer = time.time()
+						
+					elif time.time() - ping_timer > 30:
+						user.update_trades()
+						user.clean_handle()
+						ping_timer = time.time()
+
+						if time.time() - user.last_update > 90:
+							reconnect_user(user)
+
+
 			except Exception:
 				print(traceback.format_exc(), flush=True)
 
@@ -194,6 +213,9 @@ def onCommand(data):
 			
 			elif cmd == 'authCheck':
 				res = user.authCheck(*data.get('args'), **data.get('kwargs'))
+
+			elif cmd == 'disconnectBroker':
+				res = user.disconnectBroker(*data.get('args'), **data.get('kwargs'))
 
 			sendResponse(data.get('msg_id'), res)
 

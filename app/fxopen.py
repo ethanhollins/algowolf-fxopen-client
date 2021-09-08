@@ -56,7 +56,7 @@ class FXOpen(object):
 
 		self.is_running = True
 		self.is_connected = False
-		self._last_update = 0
+		self.last_update = time.time()
 
 		if self.isDemo:
 			self._url = f'https://marginalttdemowebapi.fxopen.net:8443'
@@ -74,6 +74,8 @@ class FXOpen(object):
 		self.account_subscriptions = []
 		self.price_subscriptions = {}
 
+		self._handle = {}
+
 		self.account_client = None
 		if broker_id != "PARENT":
 			self.account_client = Client(self, is_demo=self.isDemo, client_type="account")
@@ -82,31 +84,9 @@ class FXOpen(object):
 			# self.price_client = Client(self, is_demo=self.isDemo, client_type="price")
 			# self.price_client.connect()
 
-		self._send_login()
+		self.send_login()
 
 		print('[FXOpen.__init__] DONE.', flush=True)
-
-		# Thread(target=self._periodic_check).start()
-
-	
-	def _periodic_check(self):
-		TEN_SECONDS = 10
-		self._last_update = time.time()
-		# Send ping to server to check connection status
-		while self.is_running:
-			if time.time() - self._last_update > TEN_SECONDS:
-				# if self.is_connected:
-				# 	print('SEND PING', flush=True)
-
-				# 	# msg_id = self.generateReference()
-				# 	# self.client.send({
-				# 	# 	"Id": msg_id,
-				# 	# 	"Request": "Trades"
-				# 	# })
-				# 	self._last_update = time.time()
-				pass
-
-			time.sleep(5)
 		
 
 	def generateReference(self):
@@ -159,6 +139,10 @@ class FXOpen(object):
 		# print(f"[FXOpen.on_account_message] {json.dumps(msg, indent=2)}")
 		for sub in self.account_subscriptions:
 			sub.onUpdate(msg)
+		
+		msg_id = msg.get("Id")
+		if msg_id is not None:
+			self.check_handle(msg_id)
 
 
 	def on_price_message(self, msg):
@@ -818,7 +802,7 @@ class FXOpen(object):
 		return int(size * 100000)
 
 
-	def _send_login(self):
+	def send_login(self):
 		timestamp, signature = self.generateStreamHmac()
 
 		payload = {
@@ -841,6 +825,33 @@ class FXOpen(object):
 		# 	self.price_client.send(payload)
 
 
+	def reset_last_update(self):
+		self.last_update = time.time()
+
+
+	def check_handle(self, msg_id):
+		if msg_id in self._handle:
+			self._handle[msg_id][0](*self._handle[msg_id][1], **self._handle[msg_id][2])
+			del self._handle[msg_id]
+
+
+	def clean_handle(self):
+		for k in list(self._handle.keys()):
+			if time.time() - self._handle[k][3] > 30:
+				del self._handle[k]
+
+
+	def update_trades(self):
+		if self.account_client is not None:
+			msg_id = self.generateReference()
+
+			self._handle[msg_id] = (self.reset_last_update, (), {}, time.time())
+			self.account_client.send({
+				"Id": msg_id,
+				"Request": "Trades"
+			})
+
+
 	def subscribe_account_updates(self, msg_id):
 		self.account_subscriptions.append(Subscription(self, msg_id))
 
@@ -860,3 +871,13 @@ class FXOpen(object):
 				}]
 			}
 		})
+
+
+	# TESTING
+	def disconnectBroker(self):
+		if self.account_client is not None:
+			self.account_client.shutdown()
+
+		return {
+			'result': 'success'
+		}
