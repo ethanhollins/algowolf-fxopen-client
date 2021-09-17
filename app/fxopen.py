@@ -136,13 +136,19 @@ class FXOpen(object):
 
 
 	def on_account_message(self, msg):
-		# print(f"[FXOpen.on_account_message] {json.dumps(msg, indent=2)}")
+		print(f"[FXOpen.on_account_message] {json.dumps(msg, indent=2)}")
 		for sub in self.account_subscriptions:
 			sub.onUpdate(msg)
 		
 		msg_id = msg.get("Id")
 		if msg_id is not None:
 			self.check_handle(msg_id)
+
+		error = msg.get("Error")
+		if error is not None:
+			if "login" in error:
+				self.send_login()
+
 
 
 	def on_price_message(self, msg):
