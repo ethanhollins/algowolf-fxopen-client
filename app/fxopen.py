@@ -879,6 +879,10 @@ class FXOpen(object):
 		})
 
 
+	def heartbeat(self):
+		return { "result": True }
+
+
 	# TESTING
 	def disconnectBroker(self):
 		if self.account_client is not None:

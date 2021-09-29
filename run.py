@@ -111,25 +111,24 @@ def reconnect_user(user):
 def onFXODisconnect():
 	ping_timer = time.time()
 	while True:
-		for broker_id in user_container.users:
-			user = user_container.users[broker_id]
-			try:
-				if user.account_client is not None:
-					if not user.account_client.is_connected:
-						reconnect_user(user)
-						ping_timer = time.time()
-						
-					elif time.time() - ping_timer > 30:
-						user.update_trades()
-						user.clean_handle()
-						ping_timer = time.time()
-
-						if time.time() - user.last_update > 90:
+		if time.time() - ping_timer > 30:
+			ping_timer = time.time()
+			for broker_id in user_container.users:
+				user = user_container.users[broker_id]
+				try:
+					if user.account_client is not None:
+						if not user.account_client.is_connected:
 							reconnect_user(user)
+							
+						else:
+							user.update_trades()
+							user.clean_handle()
 
+							if time.time() - user.last_update > 90:
+								reconnect_user(user)
 
-			except Exception:
-				print(traceback.format_exc(), flush=True)
+				except Exception:
+					print(traceback.format_exc(), flush=True)
 
 		# try:
 		# 	if not user.price_client.is_connected:
@@ -216,6 +215,12 @@ def onCommand(data):
 
 			elif cmd == 'disconnectBroker':
 				res = user.disconnectBroker(*data.get('args'), **data.get('kwargs'))
+
+			elif cmd == 'heartbeat':
+				if user is not None:
+					res = user.heartbeat(*data.get('args'), **data.get('kwargs'))
+				else:
+					res = { "result": False }
 
 			sendResponse(data.get('msg_id'), res)
 
