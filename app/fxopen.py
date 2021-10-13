@@ -349,6 +349,9 @@ class FXOpen(object):
 		account_id, entry_range, entry_price,
 		sl_range, tp_range, sl_price, tp_price
 	):
+		if not self.is_connected:
+			return {'status': 400, 'result': {}}
+
 		uri = self._url + '/api/v2/trade'
 
 		fxo_instrument = self.convertToFXOInstrument(product)
@@ -386,7 +389,7 @@ class FXOpen(object):
 			return {'status': status_code, 'result': {}}
 
 
-	def modifyPosition(self, pos, sl_price, tp_price):
+	def modifyPosition(self, pos, sl_price, tp_price):		
 		uri = self._url + '/api/v2/trade'
 		payload = {
 			'Id': int(pos['order_id']),
@@ -408,7 +411,7 @@ class FXOpen(object):
 			return {'status': status_code, 'result': {}}
 
 
-	def deletePosition(self, pos, lotsize):
+	def deletePosition(self, pos, lotsize):		
 		size = self.convertToUnitSize(lotsize)
 
 		uri = self._url + '/api/v2/trade'
@@ -547,6 +550,9 @@ class FXOpen(object):
 		account_id, order_type, entry_range, entry_price,
 		sl_range, tp_range, sl_price, tp_price
 	):
+		if not self.is_connected:
+			return {'status': 400, 'result': {}}
+	
 		uri = self._url + '/api/v2/trade'
 
 		fxo_instrument = self.convertToFXOInstrument(product)
@@ -645,7 +651,7 @@ class FXOpen(object):
 			return {'status': status_code, 'result': {}}
 
 
-	def deleteOrder(self, order):
+	def deleteOrder(self, order):		
 		uri = self._url + '/api/v2/trade'
 		params = {
 			'type': 'Cancel',

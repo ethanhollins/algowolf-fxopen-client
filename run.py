@@ -114,9 +114,10 @@ def onFXODisconnect():
 		if time.time() - ping_timer > 30:
 			ping_timer = time.time()
 			for broker_id in user_container.users:
-				user = user_container.users[broker_id]
 				try:
+					user = user_container.users[broker_id]
 					if user.account_client is not None:
+						print(f"[FXOpen.onFXODisconnect] ({broker_id}) Connected: {user.account_client.is_connected}", flush=True)
 						if not user.account_client.is_connected:
 							reconnect_user(user)
 							
@@ -128,7 +129,7 @@ def onFXODisconnect():
 								reconnect_user(user)
 
 				except Exception:
-					print(traceback.format_exc(), flush=True)
+					print(f"[FXOpen.onFXODisconnect] {traceback.format_exc()}", flush=True)
 				
 				time.sleep(0.1)
 
