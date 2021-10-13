@@ -114,7 +114,7 @@ def onFXODisconnect():
 		if time.time() - ping_timer > 30:
 			ping_timer = time.time()
 			try:
-				for broker_id in user_container.users:
+				for broker_id in list(user_container.users.keys()):
 					user = user_container.users[broker_id]
 					if user.account_client is not None:
 						print(f"[FXOpen.onFXODisconnect] ({broker_id}) Connected: {user.account_client.is_connected}", flush=True)
