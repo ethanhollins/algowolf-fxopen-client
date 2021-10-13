@@ -151,8 +151,8 @@ class Client(object):
 
 		try:
 			self.ssock.connect((self.host, self.port))
-		except ConnectionRefusedError:
-			print(traceback.format_exc())
+		except Exception:
+			print(f"[FXOpen.connect] {traceback.format_exc()}")
 			return
 
 		handshake = f'GET / HTTP/1.1\r\nHost: {self.host}\r\nUpgrade: websocket\r\nConnection: ' \
