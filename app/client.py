@@ -148,7 +148,12 @@ class Client(object):
 
 		PEM_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "cert.pem")
 		self.ssock = ssl.wrap_socket(sock, ssl_version=ssl.PROTOCOL_TLS, certfile=PEM_PATH, keyfile=PEM_PATH)
-		self.ssock.connect((self.host, self.port))
+
+		try:
+			self.ssock.connect((self.host, self.port))
+		except ConnectionRefusedError:
+			print(traceback.format_exc())
+			return
 
 		handshake = f'GET / HTTP/1.1\r\nHost: {self.host}\r\nUpgrade: websocket\r\nConnection: ' \
             f'Upgrade\r\nSec-WebSocket-Key: {self.broker.generateReference()}\r\nOrigin: https://api.algowolf.com\r\nSec-WebSocket-Protocol: ' \

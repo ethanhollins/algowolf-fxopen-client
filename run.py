@@ -129,6 +129,8 @@ def onFXODisconnect():
 
 				except Exception:
 					print(traceback.format_exc(), flush=True)
+				
+				time.sleep(0.1)
 
 		# try:
 		# 	if not user.price_client.is_connected:
