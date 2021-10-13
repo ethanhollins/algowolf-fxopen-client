@@ -826,7 +826,10 @@ class FXOpen(object):
 		}
 
 		if self.brokerId != "PARENT":
-			self.account_client.send(payload)
+			try:
+				self.account_client.send(payload)
+			except Exception:
+				pass
 		# else:
 		# 	self.price_client.send(payload)
 
