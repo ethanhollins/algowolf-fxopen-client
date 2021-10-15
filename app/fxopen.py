@@ -349,7 +349,7 @@ class FXOpen(object):
 		account_id, entry_range, entry_price,
 		sl_range, tp_range, sl_price, tp_price
 	):
-		if not self.is_connected:
+		if not self.account_client.is_connected:
 			return {'status': 400, 'result': {}}
 
 		uri = self._url + '/api/v2/trade'
@@ -550,7 +550,7 @@ class FXOpen(object):
 		account_id, order_type, entry_range, entry_price,
 		sl_range, tp_range, sl_price, tp_price
 	):
-		if not self.is_connected:
+		if not self.account_client.is_connected:
 			return {'status': 400, 'result': {}}
 	
 		uri = self._url + '/api/v2/trade'
