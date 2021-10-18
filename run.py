@@ -122,8 +122,8 @@ def onFXODisconnect():
 							reconnect_user(user)
 							
 						else:
-							# user.update_trades()
-							# user.clean_handle()
+							user.update_trades()
+							user.clean_handle()
 
 							# if time.time() - user.last_update > 90:
 							# 	reconnect_user(user)
