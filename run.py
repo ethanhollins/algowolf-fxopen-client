@@ -122,13 +122,14 @@ def onFXODisconnect():
 							reconnect_user(user)
 							
 						else:
-							user.update_trades()
-							user.clean_handle()
+							# user.update_trades()
+							# user.clean_handle()
 
 							# if time.time() - user.last_update > 90:
 							# 	reconnect_user(user)
+							pass
 
-				time.sleep(0.1)
+					time.sleep(0.1)
 
 			except Exception:
 				print(f"[FXOpen.onFXODisconnect] {traceback.format_exc()}", flush=True)
