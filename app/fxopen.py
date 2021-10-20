@@ -338,7 +338,7 @@ class FXOpen(object):
 					new_pos = self._convert_fxo_position(account_id, pos)
 					result[account_id].append(new_pos)
 
-			print(result, flush=True)
+			print(f"[_get_all_positions] {json.dumps(result, indent=2)}", flush=True)
 			return result
 		else:
 			return None
@@ -383,7 +383,7 @@ class FXOpen(object):
 
 		if status_code == 200:
 			data = res.json()
-			print(f'[FXOpen.createPosition] DONE: {status_code}, {data}', flush=True)
+			print(f'[FXOpen.createPosition] DONE: {status_code}\n{json.dumps(data, indent=2)}', flush=True)
 			return {'status': status_code, 'result': data}
 		else:
 			return {'status': status_code, 'result': {}}
@@ -405,7 +405,7 @@ class FXOpen(object):
 
 		if status_code == 200:
 			data = res.json()
-			print(f'[FXOpen.modifyPosition] DONE: {status_code}, {data}', flush=True)
+			print(f'[FXOpen.modifyPosition] DONE: {status_code}\n{json.dumps(data, indent=2)}', flush=True)
 			return {'status': status_code, 'result': data}
 		else:
 			return {'status': status_code, 'result': {}}
@@ -429,7 +429,7 @@ class FXOpen(object):
 
 		if status_code == 200:
 			data = res.json()
-			print(f'[FXOpen.deletePosition] DONE: {status_code}, {data}', flush=True)
+			print(f'[FXOpen.deletePosition] DONE: {status_code}\n{json.dumps(data, indent=2)}', flush=True)
 			return {'status': status_code, 'result': data}
 		else:
 			return {'status': status_code, 'result': {}}
@@ -485,7 +485,7 @@ class FXOpen(object):
 					new_order = self._convert_fxo_order(account_id, order)
 					result[account_id].append(new_order)
 
-			print(result, flush=True)
+			print(f"[_get_all_orders] {json.dumps(result, indent=2)}", flush=True)
 			return result
 		else:
 			return None
@@ -606,7 +606,7 @@ class FXOpen(object):
 
 		if status_code == 200:
 			data = res.json()
-			print(f'[FXOpen.createOrder] DONE: {status_code}, {data}', flush=True)
+			print(f'[FXOpen.createOrder] DONE: {status_code}\n{json.dumps(data, indent=2)}', flush=True)
 			return {'status': status_code, 'result': data}
 		else:
 			return {'status': status_code, 'result': {}}
@@ -645,7 +645,7 @@ class FXOpen(object):
 
 		if status_code == 200:
 			data = res.json()
-			print(f'[FXOpen.modifyOrder] DONE: {status_code}, {data}', flush=True)
+			print(f'[FXOpen.modifyOrder] DONE: {status_code}\n{json.dumps(data, indent=2)}', flush=True)
 			return {'status': status_code, 'result': data}
 		else:
 			return {'status': status_code, 'result': {}}
@@ -671,7 +671,7 @@ class FXOpen(object):
 
 		if status_code == 200:
 			data = res.json()
-			print(f'[FXOpen.deleteOrder] DONE: {status_code}, {data}', flush=True)
+			print(f'[FXOpen.deleteOrder] DONE: {status_code}\n{json.dumps(data, indent=2)}', flush=True)
 			return {'status': status_code, 'result': data}
 		else:
 			return {'status': status_code, 'result': {}}
