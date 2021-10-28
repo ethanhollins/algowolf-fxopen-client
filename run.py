@@ -4,6 +4,8 @@ import os
 import json
 import time
 import traceback
+import shortuuid
+from redis import Redis
 from app.fxopen import FXOpen
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -17,6 +19,8 @@ class UserContainer(object):
 		self.sio = sio
 		self.parent = None
 		self.users = {}
+		self.add_user_queue = []
+		self.redis_client = Redis(host='redis', port=6379, password="dev")
 
 	def setParent(self, parent):
 		self.parent = parent
@@ -26,9 +30,9 @@ class UserContainer(object):
 		return self.parent
 
 
-	def addUser(self, user_id, broker_id, api_id, api_key, api_secret, is_demo, is_parent):
+	def addUser(self, user_id, strategy_id, broker_id, api_id, api_key, api_secret, is_demo, is_parent):
 		if broker_id not in self.users:
-			self.users[broker_id] = FXOpen(self, user_id, broker_id, api_id, api_key, api_secret, is_demo)
+			self.users[broker_id] = FXOpen(self, user_id, strategy_id, broker_id, api_id, api_key, api_secret, is_demo)
 			if is_parent:
 				self.parent = self.users[broker_id]
 
@@ -43,6 +47,17 @@ class UserContainer(object):
 
 	def getUser(self, port):
 		return self.users.get(port)
+
+	
+	def addToUserQueue(self):
+		_id = shortuuid.uuid()
+		self.add_user_queue.append(_id)
+		while self.add_user_queue[0] != _id:
+			time.sleep(0.1)
+
+
+	def popUserQueue(self):
+		del self.add_user_queue[0]
 
 
 def getConfig():
@@ -79,8 +94,15 @@ def sendResponse(msg_id, res):
 	)
 
 
-def onAddUser(user_id, broker_id, api_key, api_id, api_secret, is_demo, accounts, is_parent, is_dummy):
-	user = user_container.addUser(user_id, broker_id, api_id, api_key, api_secret, is_demo, is_parent)
+def onAddUser(user_id, strategy_id, broker_id, api_key, api_id, api_secret, is_demo, accounts, is_parent, is_dummy):
+	user_container.addToUserQueue()
+	try:
+		user = user_container.addUser(user_id, strategy_id, broker_id, api_id, api_key, api_secret, is_demo, is_parent)
+	except Exception:
+		print(traceback.format_exc())
+	finally:
+		user_container.popUserQueue()
+		
 	return {
 		'completed': True
 	}
