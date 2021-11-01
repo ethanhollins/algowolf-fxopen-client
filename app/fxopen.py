@@ -17,9 +17,10 @@ from .client import Client
 
 class Subscription(object):
 
-	def __init__(self, broker, msg_id, *args):
+	def __init__(self, broker, msg_id, _type, *args):
 		self.broker = broker
 		self.msg_id = msg_id
+		self.type = _type
 
 		self.res = []
 		self.args = args
@@ -33,13 +34,27 @@ class Subscription(object):
 		self.stream = stream
 
 	def onUpdate(self, *args):
-		self.broker._send_response(
-			self.msg_id,
-			{
-				'args': args,
-				'kwargs': {}
-			}
-		)
+		# self.broker._send_response(
+		# 	self.msg_id,
+		# 	{
+		# 		'args': args,
+		# 		'kwargs': {}
+		# 	}
+		# )
+
+		if self.type == 1:
+			self.broker.container.zmq_req_socket.send_json({
+				"type": "account",
+				"message": {
+					"msg_id": self.msg_id,
+					"result": {
+						"args": args,
+						"kwargs": {}
+					}
+				}
+			})
+
+			# self.broker.container.zmq_req_socket.recv()
 
 
 
@@ -90,7 +105,7 @@ class FXOpen(object):
 		self.send_login()
 
 		print('[FXOpen.__init__] DONE.', flush=True)
-		
+
 
 	def generateReference(self):
 		return shortuuid.uuid()
@@ -125,17 +140,17 @@ class FXOpen(object):
 		return timestamp, base64_hmac_str
 
 
-	def _send_response(self, msg_id, res):
-		res = {
-			'msg_id': msg_id,
-			'result': res
-		}
+	# def _send_response(self, msg_id, res):
+	# 	res = {
+	# 		'msg_id': msg_id,
+	# 		'result': res
+	# 	}
 
-		self.container.sio.emit(
-			'broker_res', 
-			res, 
-			namespace='/broker'
-		)
+	# 	self.container.sio.emit(
+	# 		'broker_res', 
+	# 		res, 
+	# 		namespace='/broker'
+	# 	)
 
 
 	def on_account_message(self, msg):
@@ -384,14 +399,26 @@ class FXOpen(object):
 		if from_order is not None:
 			self.deleteDbOrder(from_order["order_id"])
 
-			self.handleOnTrade(account_id, {
-				self.generateReference(): {
-					'timestamp': from_order["close_time"],
-					'type': tl.ORDER_CANCEL,
-					'accepted': True,
-					'item': from_order
-				}
-			})
+			for sub in self.account_subscriptions:
+				sub.onUpdate(
+					{
+						self.generateReference(): {
+							'timestamp': from_order["close_time"],
+							'type': tl.ORDER_CANCEL,
+							'accepted': True,
+							'item': from_order
+						}
+					}, 
+					account_id, None
+				)
+			# self.handleOnTrade(account_id, {
+			# 	self.generateReference(): {
+			# 		'timestamp': from_order["close_time"],
+			# 		'type': tl.ORDER_CANCEL,
+			# 		'accepted': True,
+			# 		'item': from_order
+			# 	}
+			# })
 
 		result = {}
 		client_id = trade.get("ClientId")
@@ -465,14 +492,26 @@ class FXOpen(object):
 		if from_order is not None:
 			self.deleteDbOrder(from_order["order_id"])
 
-			self.handleOnTrade(account_id, {
-				self.generateReference(): {
-					'timestamp': from_order["close_time"],
-					'type': tl.ORDER_CANCEL,
-					'accepted': True,
-					'item': from_order
-				}
-			})
+			for sub in self.account_subscriptions:
+				sub.onUpdate(
+					{
+						self.generateReference(): {
+							'timestamp': from_order["close_time"],
+							'type': tl.ORDER_CANCEL,
+							'accepted': True,
+							'item': from_order
+						}
+					}, 
+					account_id, None
+				)
+			# self.handleOnTrade(account_id, {
+			# 	self.generateReference(): {
+			# 		'timestamp': from_order["close_time"],
+			# 		'type': tl.ORDER_CANCEL,
+			# 		'accepted': True,
+			# 		'item': from_order
+			# 	}
+			# })
 
 		result = {}
 		client_id = trade.get("ClientId")
@@ -561,6 +600,8 @@ class FXOpen(object):
 					order["entry_price"] = trade["StopPrice"]
 				else:
 					order["entry_price"] = trade["Price"]
+
+				self.replaceDbOrder(order)
 
 				result[self.generateReference()] = {
 					'timestamp': trade["Modified"] / 1000,
@@ -1129,12 +1170,12 @@ class FXOpen(object):
 
 
 	def subscribe_account_updates(self, msg_id):
-		self.account_subscriptions.append(Subscription(self, msg_id))
+		self.account_subscriptions.append(Subscription(self, msg_id, 1))
 
 
 	def subscribe_price_updates(self, msg_id, instrument):
 		return
-		self.price_subscriptions[instrument] = Subscription(self, msg_id)
+		self.price_subscriptions[instrument] = Subscription(self, msg_id, 0)
 
 		fxo_instrument = self.convertToFXOInstrument(instrument)
 		self.price_client.send({
