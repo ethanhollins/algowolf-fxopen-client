@@ -43,7 +43,7 @@ class Subscription(object):
 		# )
 
 		if self.type == 1:
-			self.broker.container.zmq_req_socket.send_json({
+			self.broker.container.send_queue.append({
 				"type": "account",
 				"message": {
 					"msg_id": self.msg_id,
@@ -1169,8 +1169,21 @@ class FXOpen(object):
 			})
 
 
+	def _get_account_subscription_msg_id(self):
+		for sub in self.account_subscriptions:
+			return sub.msg_id
+		return None
+
+
 	def subscribe_account_updates(self, msg_id):
-		self.account_subscriptions.append(Subscription(self, msg_id, 1))
+		existing_msg_id = self._get_account_subscription_msg_id()
+
+		if existing_msg_id is None:
+			self.account_subscriptions.append(Subscription(self, msg_id, 1))
+		else:
+			msg_id = existing_msg_id
+		
+		return msg_id
 
 
 	def subscribe_price_updates(self, msg_id, instrument):

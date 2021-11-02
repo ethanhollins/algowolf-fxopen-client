@@ -21,22 +21,9 @@ class UserContainer(object):
 		self.parent = None
 		self.users = {}
 		self.add_user_queue = []
+		self.send_queue = []
 		self.redis_client = Redis(host='redis', port=6379, password="dev")
-		self._setup_zmq_connections()
-
-
-	def _setup_zmq_connections(self):
 		self.zmq_context = zmq.Context()
-
-		self.zmq_req_socket = self.zmq_context.socket(zmq.DEALER)
-		self.zmq_req_socket.connect("tcp://zmq_broker:5557")
-
-		self.zmq_pull_socket = self.zmq_context.socket(zmq.PULL)
-		self.zmq_pull_socket.connect("tcp://zmq_broker:5559")
-
-		self.zmq_poller = zmq.Poller()
-		self.zmq_poller.register(self.zmq_pull_socket, zmq.POLLIN)
-		self.zmq_poller.register(self.zmq_req_socket, zmq.POLLIN)
 
 
 	def setParent(self, parent):
@@ -107,7 +94,7 @@ def sendResponse(msg_id, res):
 		}
 	}
 
-	user_container.zmq_req_socket.send_json(res)
+	user_container.send_queue.append(res)
 
 
 # def sendResponse(msg_id, res):
@@ -303,7 +290,31 @@ def onCommand(data):
 
 # 	return sio
 
+def send_loop():
+	user_container.zmq_req_socket = user_container.zmq_context.socket(zmq.DEALER)
+	user_container.zmq_req_socket.connect("tcp://zmq_broker:5557")
+
+	while True:
+		try:
+			if len(user_container.send_queue):
+				item = user_container.send_queue[0]
+				del user_container.send_queue[0]
+
+				user_container.zmq_req_socket.send_json(item, zmq.NOBLOCK)
+
+		except Exception:
+			print(traceback.format_exc())
+
+		time.sleep(0.001)
+
+
 def run():
+	user_container.zmq_pull_socket = user_container.zmq_context.socket(zmq.PULL)
+	user_container.zmq_pull_socket.connect("tcp://zmq_broker:5559")
+
+	user_container.zmq_poller = zmq.Poller()
+	user_container.zmq_poller.register(user_container.zmq_pull_socket, zmq.POLLIN)
+
 	while True:
 		socks = dict(user_container.zmq_poller.poll())
 
@@ -312,14 +323,12 @@ def run():
 			print(f"[ZMQ_PULL] {message}")
 			onCommand(message)
 
-		if user_container.zmq_req_socket in socks:
-			message = user_container.zmq_req_socket.recv()
-			print(f"[ZMQ_REQ] {message}")
-
 
 if __name__ == '__main__':
+	print('START FXOPEN')
 	# sio = createApp()
 	# print('DONE')
 
+	Thread(target=send_loop).start()
 	Thread(target=run).start()
 	onFXODisconnect()
