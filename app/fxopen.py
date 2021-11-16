@@ -853,7 +853,7 @@ class FXOpen(object):
 		sl_range, tp_range, sl_price, tp_price
 	):
 		if not self.account_client.is_connected:
-			print(f"[createOrder] 1: {self.account_client.is_connected}", flush=True)
+			print(f"[createOrder] 1: {self.brokerId} {self.account_client.is_connected}", flush=True)
 			return {'status': 400, 'result': {}}
 	
 		uri = self._url + '/api/v2/trade'
