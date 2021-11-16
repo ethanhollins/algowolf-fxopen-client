@@ -902,6 +902,7 @@ class FXOpen(object):
 			print(f"[createOrder] 2: {order_type}", flush=True)
 			return {'status': 400, 'result': {}}
 
+		print(json.dumps(payload), flush=True)
 		headers = self.generateHeaders('POST', uri, json.dumps(payload))
 		self._session.headers.update(headers)
 
@@ -951,6 +952,7 @@ class FXOpen(object):
 		headers = self.generateHeaders('PUT', uri, json.dumps(payload))
 		self._session.headers.update(headers)
 
+		print(json.dumps(payload), flush=True)
 		res = self._session.put(uri, data=json.dumps(payload))
 		status_code = res.status_code
 
