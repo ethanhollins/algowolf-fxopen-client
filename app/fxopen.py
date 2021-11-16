@@ -915,8 +915,8 @@ class FXOpen(object):
 		else:
 			try:
 				print(f"[createOrder] 3: {status_code}", flush=True)
-				data = res.json()
-				print(f"[createOrder] 3: {json.dumps(data, indent=2)}", flush=True)
+				data = res.text
+				print(f"[createOrder] 3: {data}", flush=True)
 			except:
 				print(traceback.format_exc(), flush=True)
 			return {'status': status_code, 'result': {}}
@@ -961,8 +961,8 @@ class FXOpen(object):
 		else:
 			try:
 				print(f"[modifyOrder] 2: {status_code}", flush=True)
-				data = res.json()
-				print(f"[modifyOrder] 2: {json.dumps(data, indent=2)}", flush=True)
+				data = res.text
+				print(f"[modifyOrder] 2: {data}", flush=True)
 			except:
 				print(traceback.format_exc(), flush=True)
 			return {'status': status_code, 'result': {}}
