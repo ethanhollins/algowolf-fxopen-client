@@ -853,6 +853,7 @@ class FXOpen(object):
 		sl_range, tp_range, sl_price, tp_price
 	):
 		if not self.account_client.is_connected:
+			print(f"[createOrder] 1: {self.account_client.is_connected}", flush=True)
 			return {'status': 400, 'result': {}}
 	
 		uri = self._url + '/api/v2/trade'
@@ -898,6 +899,7 @@ class FXOpen(object):
 			payload['Type'] = "Stop"
 			payload['StopPrice'] = entry_price
 		else:
+			print(f"[createOrder] 2: {order_type}", flush=True)
 			return {'status': 400, 'result': {}}
 
 		headers = self.generateHeaders('POST', uri, json.dumps(payload))
@@ -911,6 +913,12 @@ class FXOpen(object):
 			print(f'[FXOpen.createOrder] DONE: {status_code}\n{json.dumps(data, indent=2)}', flush=True)
 			return {'status': status_code, 'result': data}
 		else:
+			try:
+				print(f"[createOrder] 3: {status_code}", flush=True)
+				data = res.json()
+				print(f"[createOrder] 3: {json.dumps(data, indent=2)}", flush=True)
+			except:
+				print(traceback.format_exc(), flush=True)
 			return {'status': status_code, 'result': {}}
 
 
