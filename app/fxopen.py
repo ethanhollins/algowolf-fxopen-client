@@ -945,6 +945,7 @@ class FXOpen(object):
 				'TakeProfit': tp_price
 			}
 		else:
+			print(f"[modifyOrder] 1: {order['order_type']}", flush=True)
 			return {'status': 400, 'result': {}}
 
 		headers = self.generateHeaders('PUT', uri, json.dumps(payload))
@@ -958,6 +959,12 @@ class FXOpen(object):
 			print(f'[FXOpen.modifyOrder] DONE: {status_code}\n{json.dumps(data, indent=2)}', flush=True)
 			return {'status': status_code, 'result': data}
 		else:
+			try:
+				print(f"[modifyOrder] 2: {status_code}", flush=True)
+				data = res.json()
+				print(f"[modifyOrder] 2: {json.dumps(data, indent=2)}", flush=True)
+			except:
+				print(traceback.format_exc(), flush=True)
 			return {'status': status_code, 'result': {}}
 
 
