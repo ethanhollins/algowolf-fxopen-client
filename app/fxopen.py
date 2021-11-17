@@ -663,9 +663,9 @@ class FXOpen(object):
 		sl = 0
 		tp = 0
 		if sl_price:
-			sl = sl_price
+			sl = float(sl_price)
 		if tp_price:
-			tp = tp_price
+			tp = float(tp_price)
 
 		payload = {
 			"ClientId": self.generateReference(),
@@ -695,8 +695,8 @@ class FXOpen(object):
 		uri = self._url + '/api/v2/trade'
 		payload = {
 			'Id': int(pos['order_id']),
-			'StopLoss': sl_price,
-			'TakeProfit': tp_price
+			'StopLoss': float(sl_price),
+			'TakeProfit': float(tp_price)
 		}
 
 		headers = self.generateHeaders('PUT', uri, json.dumps(payload))
@@ -860,7 +860,6 @@ class FXOpen(object):
 
 		fxo_instrument = self.convertToFXOInstrument(product)
 		size = self.convertToUnitSize(lotsize)
-		direction = "Buy" if direction == tl.LONG else "Sell"
 
 		sl = 0
 		tp = 0
@@ -883,21 +882,23 @@ class FXOpen(object):
 			else:
 				tp = round(entry_price - tp_range, 5)
 
+		direction = "Buy" if direction == tl.LONG else "Sell"
+		
 		payload = {
 			"ClientId": self.generateReference(),
 			'Side': direction,
 			'Symbol': fxo_instrument,
 			'Amount': size,
-			'StopLoss': sl,
-			'TakeProfit': tp
+			'StopLoss': float(sl),
+			'TakeProfit': float(tp)
 		}
 
 		if order_type == tl.LIMIT_ORDER:
 			payload['Type'] = "Limit"
-			payload['Price'] = entry_price
+			payload['Price'] = float(entry_price)
 		elif order_type == tl.STOP_ORDER:
 			payload['Type'] = "Stop"
-			payload['StopPrice'] = entry_price
+			payload['StopPrice'] = float(entry_price)
 		else:
 			print(f"[createOrder] 2: {order_type}", flush=True)
 			return {'status': 400, 'result': {}}
@@ -932,18 +933,18 @@ class FXOpen(object):
 		if order['order_type'] == tl.LIMIT_ORDER:
 			payload = {
 				'Id': int(order['order_id']),
-				'Price': entry_price,
+				'Price': float(entry_price),
 				'Amount': size,
-				'StopLoss': sl_price,
-				'TakeProfit': tp_price
+				'StopLoss': float(sl_price),
+				'TakeProfit': float(tp_price)
 			}
 		elif order['order_type'] == tl.STOP_ORDER:
 			payload = {
 				'Id': int(order['order_id']),
-				'StopPrice': entry_price,
+				'StopPrice': float(entry_price),
 				'Amount': size,
-				'StopLoss': sl_price,
-				'TakeProfit': tp_price
+				'StopLoss': float(sl_price),
+				'TakeProfit': float(tp_price)
 			}
 		else:
 			print(f"[modifyOrder] 1: {order['order_type']}", flush=True)
