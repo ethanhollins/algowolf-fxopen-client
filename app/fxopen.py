@@ -1240,7 +1240,7 @@ class FXOpen(object):
 
 
 	def convertToUnitSize(self, size):
-		return int(size * 100000)
+		return int(round(size * 100) * 1000)
 
 
 	def getBrokerKey(self):
